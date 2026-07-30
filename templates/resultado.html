@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ArchivIA</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body data-tipo="{{ modo }}" data-columnas="{{ (encabezados|length if encabezados else numero_columnas) or 4 }}">
+    <div class="contenedor resultado">
+        <h1>📄 ArchivIA</h1>
+        <h2>Resultado generado</h2>
+        <p>Haz clic en cualquier celda para corregir datos y guarda los cambios antes de exportar.</p>
+
+        {% if advertencia %}
+            <div class="advertencia">{{ advertencia }}</div>
+        {% endif %}
+
+        {% if modo == 'tabla' %}
+            <div class="panel-asignacion">
+                <h3>Texto extraído</h3>
+                <p class="nota">Selecciona el texto en el área y asigna la columna donde quieres que vaya.</p>
+                <textarea id="texto-extraido" readonly>{{ texto }}</textarea>
+                <div class="acciones-asignacion">
+                    <label>
+                        Columna destino
+                        <select id="columna-destino">
+                            {% set columnas = (encabezados|length if encabezados else numero_columnas) or 4 %}
+                            {% for i in range(columnas) %}
+                                <option value="{{ i }}">{{ encabezados[i] if encabezados and encabezados[i] else 'Columna ' ~ (i + 1) }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <button id="asignar-seleccion" class="boton-link" type="button">Asignar selección</button>
+                    <button id="dividir-seleccion" class="boton-link" type="button">Dividir selección</button>
+                </div>
+                <p class="nota pequeño">Haz clic en una fila para seleccionarla. Si no hay fila seleccionada, se añadirá una nueva.</p>
+            </div>
+        {% endif %}
+
+        <div class="acciones">
+            <button id="guardar-cambios">💾 Guardar cambios</button>
+            {% if modo == "json" %}
+                <a href="/descargar_json" class="boton-link">📥 Descargar JSON</a>
+            {% elif modo == "tabla" %}
+                <a href="/descargar_excel" class="boton-link">📥 Descargar Excel</a>
+            {% endif %}
+            <button id="copiar-texto" class="boton-link" type="button">📋 Copiar texto</button>
+            <a href="/" class="boton-link">↩️ Volver</a>
+        </div>
+
+        <input id="buscar" placeholder="Buscar información...">
+
+        {% if modo == "texto" %}
+            <textarea id="texto-editable">{{ texto }}</textarea>
+        {% elif modo == "json" %}
+            <pre id="json-output">{{ json_data | tojson(indent=2) }}</pre>
+            <script type="application/json" id="json-data">{{ json_data | tojson }}</script>
+        {% else %}
+            <table id="tabla-datos">
+                <thead>
+                    <tr>
+                        {% if encabezados %}
+                            {% for titulo in encabezados %}
+                                <th data-header="{{ titulo }}">{{ titulo }}</th>
+                            {% endfor %}
+                        {% else %}
+                            {% for i in range(numero_columnas or 4) %}
+                                <th>Columna {{ i + 1 }}</th>
+                            {% endfor %}
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fila in tabla %}
+                        <tr>
+                            {% for valor in fila.values() %}
+                                <td contenteditable="true">{{ valor }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+
+        <hr>
+        <h2>Documento original</h2>
+        {% for pagina in paginas[:5] %}
+            <img src="/outputs/{{ pagina.nombre }}" width="500">
+            <br>
+        {% endfor %}
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

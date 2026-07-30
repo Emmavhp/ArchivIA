@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ArchivIA</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="contenedor">
+        <h1>📄 ArchivIA</h1>
+        <p>Convierte PDFs en tabla, texto editable o JSON con columnas configurables.</p>
+
+        <form action="/upload" method="POST" enctype="multipart/form-data">
+            <label class="grupo">
+                <span>¿Qué quieres obtener?</span>
+                <select name="modo">
+                    <option value="tabla">Tabla estructurada</option>
+                    <option value="texto">Texto suelto</option>
+                    <option value="json">JSON</option>
+                </select>
+            </label>
+
+            <label class="grupo" id="grupo-columnas" style="display: none;">
+                <span>Número de columnas</span>
+                <input type="number" name="numero_columnas" min="1" value="4">
+            </label>
+
+            <label class="grupo">
+                <span>Sube tu PDF</span>
+                <input type="file" name="archivo" accept=".pdf" required>
+            </label>
+
+            <button type="submit">Procesar PDF</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const selectModo = document.querySelector('select[name="modo"]');
+            const grupoColumnas = document.getElementById('grupo-columnas');
+
+            const actualizarVisibilidadColumnas = () => {
+                if (!grupoColumnas || !selectModo) return;
+                grupoColumnas.style.display = selectModo.value === 'tabla' ? 'block' : 'none';
+            };
+
+            if (selectModo) {
+                selectModo.addEventListener('change', actualizarVisibilidadColumnas);
+            }
+
+            actualizarVisibilidadColumnas();
+        });
+    </script>
+</body>
+</html>
