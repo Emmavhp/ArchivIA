@@ -1,5 +1,0 @@
-Flask
-openpyxl
-PyMuPDF
-Pillow
-pytesseract
