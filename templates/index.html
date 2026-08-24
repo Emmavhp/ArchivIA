@@ -3,41 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <title>ArchivIA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
-    <div class="contenedor">
-        <h1>📄 ArchivIA</h1>
-        <p>Convierte PDFs en tabla, texto editable o JSON con columnas configurables.</p>
+<body class="page-home">
+    <div class="app-shell">
+        <header class="topbar">
+            <div class="brand">
+                <span class="brand-mark">A</span>
+                <span>ArchivIA</span>
+            </div>
+            <span class="chip">IA + OCR PDF</span>
+        </header>
 
-        <form action="/upload" method="POST" enctype="multipart/form-data">
-            <label class="grupo">
-                <span>¿Qué quieres obtener?</span>
-                <select name="modo">
-                    <option value="tabla">Tabla estructurada</option>
-                    <option value="texto">Texto suelto</option>
-                    <option value="json">JSON</option>
-                </select>
-            </label>
+        <div class="contenedor home-panel">
+            <div class="hero-grid">
+                <section class="intro-copy">
+                    <span class="eyebrow">Transforma documentos en datos útiles</span>
+                    <h1>Convierte PDF en tabla, texto o JSON listo para trabajar.</h1>
+                    <p>Sube cualquier documento, extrae la información clave y exporta el resultado en el formato que necesites.</p>
 
-            <label class="grupo" id="grupo-columnas" style="display: none;">
-                <span>Número de columnas</span>
-                <input type="number" name="numero_columnas" min="1" value="4">
-            </label>
+                    <ul class="feature-list">
+                        <li>Procesamiento rápido de archivos PDF</li>
+                        <li>Tablas, texto editable y estructura JSON</li>
+                        <li>Preparado para revisión y exportación</li>
+                    </ul>
+                </section>
 
-            <label class="grupo">
-                <span>Sube tu PDF</span>
-                <input type="file" name="archivo" accept=".pdf" required>
-            </label>
+                <section class="upload-card">
+                    <form action="/upload" method="POST" enctype="multipart/form-data">
+                        <label class="grupo">
+                            <span>¿Qué quieres obtener?</span>
+                            <select name="modo">
+                                <option value="tabla">Tabla estructurada</option>
+                                <option value="texto">Texto suelto</option>
+                                <option value="json">JSON</option>
+                            </select>
+                        </label>
 
-            <button type="submit">Procesar PDF</button>
-        </form>
+                        <label class="grupo" id="grupo-columnas" style="display: none;">
+                            <span>Número de columnas</span>
+                            <input type="number" name="numero_columnas" min="1" value="4">
+                        </label>
+
+                        <label class="grupo">
+                            <span>Sube tu PDF</span>
+                            <input type="file" name="archivo" accept=".pdf" required>
+                        </label>
+
+                        <button type="submit">Procesar PDF</button>
+                    </form>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loading-overlay" role="status" aria-live="polite" aria-hidden="true">
+        <div class="loading-panel">
+            <span class="loading-spinner" aria-hidden="true"></span>
+            <h2>Tu PDF está siendo analizado</h2>
+            <p>Esto puede tardar unos momentos, dependiendo del tamaño de tu archivo.</p>
+        </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const selectModo = document.querySelector('select[name="modo"]');
             const grupoColumnas = document.getElementById('grupo-columnas');
+            const formulario = document.querySelector('form');
+            const botonProcesar = formulario?.querySelector('button[type="submit"]');
+            const pantallaCarga = document.getElementById('loading-overlay');
 
             const actualizarVisibilidadColumnas = () => {
                 if (!grupoColumnas || !selectModo) return;
@@ -46,6 +81,15 @@
 
             if (selectModo) {
                 selectModo.addEventListener('change', actualizarVisibilidadColumnas);
+            }
+
+            if (formulario && botonProcesar && pantallaCarga) {
+                formulario.addEventListener('submit', () => {
+                    botonProcesar.disabled = true;
+                    botonProcesar.textContent = 'Analizando PDF...';
+                    pantallaCarga.classList.add('is-visible');
+                    pantallaCarga.setAttribute('aria-hidden', 'false');
+                });
             }
 
             actualizarVisibilidadColumnas();

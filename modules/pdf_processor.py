@@ -40,7 +40,7 @@ except ImportError:
     OCR_AVAILABLE = False
 
 
-def _extraer_texto_ocr(pagina, dpi=300):
+def _extraer_texto_ocr(pagina, dpi=200):
     pix = pagina.get_pixmap(dpi=dpi)
     img_format = "RGB" if pix.alpha == 0 else "RGBA"
     image = Image.frombytes(img_format, [pix.width, pix.height], pix.samples)
@@ -79,7 +79,7 @@ def extraer_texto(pdf):
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 
-def convertir_pdf(pdf_path, dpi=300):
+def convertir_pdf(pdf_path, dpi=150, max_paginas_preview=5):
 
     documento = fitz.open(pdf_path)
 
@@ -87,20 +87,18 @@ def convertir_pdf(pdf_path, dpi=300):
 
     for numero in range(documento.page_count):
 
-        pagina = documento.load_page(numero)
-
-        pix = pagina.get_pixmap(dpi=dpi)
-
         nombre = f"pagina_{numero+1}.png"
 
-        ruta = os.path.join(OUTPUT_FOLDER, nombre)
-
-        pix.save(ruta)
+        if numero < max_paginas_preview:
+            pagina = documento.load_page(numero)
+            pix = pagina.get_pixmap(dpi=dpi)
+            ruta = os.path.join(OUTPUT_FOLDER, nombre)
+            pix.save(ruta)
 
         paginas.append({
             "numero": numero + 1,
             "nombre": nombre,
-            "ruta": ruta
+            "ruta": os.path.join(OUTPUT_FOLDER, nombre)
         })
 
     documento.close()
