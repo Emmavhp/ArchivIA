@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ArchivIA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="page-result" data-tipo="{{ modo }}" data-columnas="{{ (encabezados|length if encabezados else numero_columnas) or 4 }}">
+    <div class="app-shell">
+        <header class="topbar">
+            <div class="brand">
+                <span class="brand-mark">A</span>
+                <span>ArchivIA</span>
+            </div>
+            <span class="chip">Resultado generado</span>
+        </header>
+
+        <div class="contenedor resultado-panel">
+            <div class="result-header">
+                <div>
+                    <span class="eyebrow">Documento procesado</span>
+                    <h1>Tu archivo está listo para revisar</h1>
+                </div>
+                <span class="status-pill">Listo para exportar</span>
+            </div>
+
+            <p>Haz clic en cualquier celda para corregir datos y guarda los cambios antes de exportar.</p>
+
+            {% if advertencia %}
+                <div class="advertencia">{{ advertencia }}</div>
+            {% endif %}
+
+            {% if modo == 'tabla' %}
+                <div class="panel-asignacion">
+                    <h3>Texto extraído</h3>
+                    <p class="nota">Selecciona el texto en el área y asigna la columna donde quieres que vaya.</p>
+                    <textarea id="texto-extraido" readonly>{{ texto }}</textarea>
+                    <div class="acciones-asignacion">
+                        <label>
+                            Columna destino
+                            <select id="columna-destino">
+                                {% set columnas = (encabezados|length if encabezados else numero_columnas) or 4 %}
+                                {% for i in range(columnas) %}
+                                    <option value="{{ i }}">{{ encabezados[i] if encabezados and encabezados[i] else 'Columna ' ~ (i + 1) }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <button id="asignar-seleccion" class="boton-link" type="button">Asignar selección</button>
+                        <button id="dividir-seleccion" class="boton-link" type="button">Dividir selección</button>
+                    </div>
+                    <p class="nota pequeño">Haz clic en una fila para seleccionarla. Si no hay fila seleccionada, se añadirá una nueva.</p>
+                </div>
+            {% endif %}
+
+            <div class="acciones">
+                <button id="guardar-cambios">💾 Guardar cambios</button>
+                {% if modo == "json" %}
+                    <a href="/descargar_json" class="boton-link">📥 Descargar JSON</a>
+                {% elif modo == "tabla" %}
+                    <a href="/descargar_excel" class="boton-link">📥 Descargar Excel</a>
+                {% endif %}
+                <button id="copiar-texto" class="boton-link" type="button">📋 Copiar texto</button>
+                <a href="/" class="boton-link">↩️ Volver</a>
+            </div>
+
+            <input id="buscar" placeholder="Buscar información...">
+
+            {% if modo == "texto" %}
+                <section class="editor-pdf" aria-label="Editor de texto sobre el PDF">
+                    <div class="editor-pdf-header">
+                        <div>
+                            <h2>Editar texto sobre el documento</h2>
+                            <p class="nota">Elige una página para revisar y modificar su texto directamente sobre la imagen.</p>
+                        </div>
+                        <label class="selector-pagina">
+                            Página
+                            <select id="pagina-texto">
+                                {% for pagina in paginas[:5] %}
+                                    <option value="{{ pagina.numero }}">Página {{ pagina.numero }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                    </div>
+                    <div class="pagina-editor" id="pagina-editor">
+                        <img id="imagen-pagina-texto" src="" alt="Página seleccionada del documento">
+                        <textarea id="texto-editable" aria-label="Texto de la página seleccionada"></textarea>
+                    </div>
+                    <p class="nota pequeño" id="estado-pagina-texto"></p>
+                </section>
+            {% elif modo == "json" %}
+                <pre id="json-output">{{ json_data | tojson(indent=2) }}</pre>
+                <script type="application/json" id="json-data">{{ json_data | tojson }}</script>
+            {% else %}
+                <table id="tabla-datos">
+                    <thead>
+                        <tr>
+                            {% if encabezados %}
+                                {% for titulo in encabezados %}
+                                    <th data-header="{{ titulo }}">{{ titulo }}</th>
+                                {% endfor %}
+                            {% else %}
+                                {% for i in range(numero_columnas or 4) %}
+                                    <th>Columna {{ i + 1 }}</th>
+                                {% endfor %}
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fila in tabla %}
+                            <tr>
+                                {% for valor in fila.values() %}
+                                    <td contenteditable="true">{{ valor }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+
+            <hr>
+            {% if modo != "texto" %}
+                <h2>Documento original</h2>
+                {% for pagina in paginas[:5] %}
+                    <img src="/outputs/{{ pagina.nombre }}" width="500" alt="Página del documento original">
+                    <br>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+
+    {% if modo == "texto" %}
+        <script type="application/json" id="texto-original">{{ texto | tojson }}</script>
+        <script type="application/json" id="paginas-originales">{{ paginas[:5] | tojson }}</script>
+    {% endif %}
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
